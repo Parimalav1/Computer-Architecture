@@ -11,8 +11,9 @@ if len(sys.argv) > 1:
         lines = f.readlines()
     for line in lines:
         line = line.split('#')[0].strip()
-        instruction = int(line, 2)
-        program.append(instruction)
+        if len(line) > 0:
+            instruction = int(line, 2)
+            program.append(instruction)
 cpu = CPU()
 
 cpu.load(program)

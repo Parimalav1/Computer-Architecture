@@ -9,6 +9,8 @@ MUL = 0b10100010
 PRN = 0b01000111
 PUSH = 0b01000101
 POP = 0b01000110
+CALL = 0b01010000
+RET = 0b00010001
 
 
 class CPU:
@@ -22,7 +24,7 @@ class CPU:
         self.mar = 0
         self.mdr = 0
         self.ram = [0] * 256
-        self.sp = 255
+        self.sp = 256
     #     self.branchtable = {}
     #     self.branchtable[ADD] = self.handle_ADD
     #     self.branchtable[HLT] = self.handle_HLT
@@ -117,6 +119,20 @@ class CPU:
             print(" %02X" % self.reg[i], end='')
 
         print()
+
+    def push_value(self, value):
+        # pc-address, sp-register
+        # decrement pc and copy the value
+        self.sp -= 1
+        top_of_stack = self.sp
+        self.ram[top_of_stack] = value
+
+    def pop_value(self):
+        # Get value from top of stack & increment the pc
+        top_of_stack = self.sp
+        value = self.ram[top_of_stack]
+        self.sp += 1
+        return value
 
     # def run(self):
     #     """Run the CPU."""
@@ -216,6 +232,27 @@ class CPU:
                 # Increment the SP
                 self.sp += 1
                 self.pc += 2
+
+            elif self.ir == CALL:
+                # Get address of the next instruction after the CALL
+                return_add = self.pc + 2
+
+                # Push it on the stack
+                self.push_value(return_add)
+
+                # Get subroutine address from register
+                reg_num = self.ram_read(self.pc + 1)
+                subroutine_add = self.reg[reg_num]
+                # Jump to it
+                self.pc = subroutine_add
+
+            elif self.ir == RET:
+                # Get return addr from top of stack
+                return_add = self.pop_value()
+
+                # Store it in the PC
+                self.pc = return_add
+
             else:
                 print(f'unknown instruction {self.ir} at address {self.pc}')
                 sys.exit(1)
